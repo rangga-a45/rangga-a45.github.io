@@ -466,20 +466,13 @@
   // ============================================================
   let kedekatan = 0, humor = 0, kepercayaan = 0;
   let pilihanLog = [];
-
-  // ---- SESSION TOKEN untuk membatalkan async yang sedang berjalan ----
-  // Setiap kali ganti scene (klik MENU/ULANGI), token di-increment
-  // Semua async loop akan cek apakah token masih sama; jika tidak, berhenti.
   let sessionToken = 0;
 
-  // ---- AUDIO STATE ----
+  // ---- AUDIO STATE (hanya MP3) ----
   let musicPlaying = false;
-  let bgmAudioEl = null;          // HTMLAudioElement untuk Yiruma MP3
-  let usingYiruma = false;        // true jika MP3 berhasil dimuat
-  let audioCtx = null;            // untuk fallback Web Audio
-  let masterGain = null;
-  let loopTimeout = null;
-  let activeNotes = [];
+  let bgmAudioEl = null;
+  let mp3Loaded = false;
+  let mp3Tried = 0;
 
   // ---- KONFIGURASI ----
   const CONFIG = {
@@ -491,13 +484,9 @@
     typingIndicatorMax: 2800,
   };
 
-  // ---- PATH FILE MP3 YIRUMA ----
-  // Taruh file MP3 di folder yang sama dengan HTML ini, atau sesuaikan path.
-  // Nama file harus persis: "Yiruma, (이루마) - River Flows in You - YIRUMA place 이루마 official (128k).mp3"
-  const YIRUMA_FILENAME = "Yiruma, (이루마) - River Flows in You - YIRUMA place 이루마 official (128k).mp3";
-  // Fallback: coba juga nama umum jika user simpan dengan nama berbeda
-  const YIRUMA_FALLBACK_NAMES = [
-    YIRUMA_FILENAME,
+  // ---- NAMA FILE MP3 ----
+  const MP3_FILENAMES = [
+    "Yiruma, (이루마) - River Flows in You - YIRUMA place 이루마 official (128k).mp3",
     "River Flows in You.mp3",
     "yiruma-river-flows-in-you.mp3",
     "river-flows-in-you.mp3"
@@ -513,211 +502,85 @@
   const headerAvatar = document.getElementById('headerAvatar');
 
   // ============================================================
-  //  AUDIO — YIRUMA MP3 DENGAN FALLBACK WEB AUDIO
+  //  AUDIO — HANYA MP3 YIRUMA
   // ============================================================
-  function initYirumaAudio() {
+  function initAudio() {
     if (bgmAudioEl) return bgmAudioEl;
     const audio = new Audio();
     audio.loop = true;
     audio.volume = 0.45;
     audio.preload = 'auto';
 
-    // Coba beberapa nama file
-    let tried = 0;
-    const tryNext = () => {
-      if (tried >= YIRUMA_FALLBACK_NAMES.length) {
-        console.warn('File Yiruma MP3 tidak ditemukan. Menggunakan fallback Web Audio.');
-        usingYiruma = false;
-        initWebAudioFallback();
-        return;
-      }
-      const name = YIRUMA_FALLBACK_NAMES[tried];
-      audio.src = name;
-      audio.load();
-      tried++;
-    };
-
     audio.addEventListener('canplaythrough', () => {
-      usingYiruma = true;
-      console.log('Yiruma MP3 berhasil dimuat:', audio.src);
-    }, { once: true });
+      mp3Loaded = true;
+      console.log('✅ MP3 berhasil dimuat:', audio.src);
+    }, { once: false });
 
     audio.addEventListener('error', () => {
-      // Coba nama berikutnya
-      tryNext();
+      mp3Tried++;
+      if (mp3Tried < MP3_FILENAMES.length) {
+        const nextName = MP3_FILENAMES[mp3Tried];
+        console.warn('❌ Gagal memuat:', audio.src, '→ coba:', nextName);
+        audio.src = nextName;
+        audio.load();
+      } else {
+        console.error('❌ Semua nama file MP3 gagal dimuat. Musik tidak akan berbunyi.');
+        console.error('Pastikan file MP3 ada di folder yang sama dengan HTML ini.');
+        mp3Loaded = false;
+      }
     });
 
-    // Mulai percobaan pertama
-    tryNext();
+    // Mulai coba nama pertama
+    audio.src = MP3_FILENAMES[0];
+    audio.load();
 
     bgmAudioEl = audio;
     return audio;
   }
 
-  function initWebAudioFallback() {
-    if (audioCtx) return;
-    try {
-      const AC = window.AudioContext || window.webkitAudioContext;
-      audioCtx = new AC();
-      masterGain = audioCtx.createGain();
-      masterGain.gain.value = 0.22;
-      masterGain.connect(audioCtx.destination);
-    } catch (e) {
-      console.warn('Web Audio tidak didukung:', e);
-    }
-  }
-
-  function playPianoNote(freq, startTime, duration, volume) {
-    if (!audioCtx || !masterGain) return;
-    const t = startTime;
-    const osc1 = audioCtx.createOscillator();
-    osc1.type = 'triangle';
-    osc1.frequency.value = freq;
-    const osc2 = audioCtx.createOscillator();
-    osc2.type = 'sine';
-    osc2.frequency.value = freq * 1.003;
-    const osc3 = audioCtx.createOscillator();
-    osc3.type = 'sine';
-    osc3.frequency.value = freq * 2;
-
-    const g1 = audioCtx.createGain();
-    const g2 = audioCtx.createGain();
-    const g3 = audioCtx.createGain();
-
-    g1.gain.setValueAtTime(0, t);
-    g1.gain.linearRampToValueAtTime(volume, t + 0.06);
-    g1.gain.linearRampToValueAtTime(volume * 0.6, t + 0.4);
-    g1.gain.exponentialRampToValueAtTime(0.0001, t + duration);
-
-    g2.gain.setValueAtTime(0, t);
-    g2.gain.linearRampToValueAtTime(volume * 0.5, t + 0.06);
-    g2.gain.exponentialRampToValueAtTime(0.0001, t + duration);
-
-    g3.gain.setValueAtTime(0, t);
-    g3.gain.linearRampToValueAtTime(volume * 0.15, t + 0.06);
-    g3.gain.exponentialRampToValueAtTime(0.0001, t + duration * 0.7);
-
-    osc1.connect(g1); g1.connect(masterGain);
-    osc2.connect(g2); g2.connect(masterGain);
-    osc3.connect(g3); g3.connect(masterGain);
-
-    osc1.start(t); osc2.start(t); osc3.start(t);
-    osc1.stop(t + duration + 0.1);
-    osc2.stop(t + duration + 0.1);
-    osc3.stop(t + duration + 0.1);
-
-    activeNotes.push(osc1, osc2, osc3);
-    setTimeout(() => {
-      [osc1, osc2, osc3].forEach(o => {
-        const idx = activeNotes.indexOf(o);
-        if (idx > -1) activeNotes.splice(idx, 1);
-      });
-    }, (duration + 0.3) * 1000);
-  }
-
-  const NOTE = {
-    E3: 164.81, F3: 174.61, G3: 196.00, A3: 220.00, B3: 246.94,
-    C4: 261.63, D4: 293.66, E4: 329.63, F4: 349.23, G4: 392.00,
-    A4: 440.00, B4: 493.88, C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46
-  };
-
-  const MELODY = [
-    { n: NOTE.A4, t: 0.0, d: 1.6, v: 0.14 }, { n: NOTE.C5, t: 1.6, d: 0.8, v: 0.12 },
-    { n: NOTE.B4, t: 2.4, d: 1.0, v: 0.13 }, { n: NOTE.A4, t: 3.4, d: 1.4, v: 0.12 },
-    { n: NOTE.F4, t: 4.8, d: 1.6, v: 0.14 }, { n: NOTE.A4, t: 6.4, d: 0.8, v: 0.12 },
-    { n: NOTE.G4, t: 7.2, d: 1.0, v: 0.13 }, { n: NOTE.F4, t: 8.2, d: 1.4, v: 0.12 },
-    { n: NOTE.E4, t: 9.6, d: 1.6, v: 0.14 }, { n: NOTE.G4, t: 11.2, d: 0.8, v: 0.12 },
-    { n: NOTE.E4, t: 12.0, d: 1.0, v: 0.13 }, { n: NOTE.C4, t: 13.0, d: 1.4, v: 0.11 },
-    { n: NOTE.D4, t: 14.4, d: 1.6, v: 0.13 }, { n: NOTE.G4, t: 16.0, d: 0.8, v: 0.12 },
-    { n: NOTE.B4, t: 16.8, d: 1.0, v: 0.13 }, { n: NOTE.D5, t: 17.8, d: 1.6, v: 0.11 },
-  ];
-
-  const COUNTER_MELODY = [
-    { n: NOTE.E5, t: 1.2, d: 1.0, v: 0.07 }, { n: NOTE.D5, t: 3.0, d: 1.0, v: 0.06 },
-    { n: NOTE.C5, t: 6.0, d: 1.0, v: 0.07 }, { n: NOTE.A4, t: 7.8, d: 1.0, v: 0.06 },
-    { n: NOTE.G4, t: 10.8, d: 1.0, v: 0.07 }, { n: NOTE.E4, t: 12.6, d: 1.0, v: 0.06 },
-    { n: NOTE.B4, t: 15.6, d: 1.2, v: 0.07 }, { n: NOTE.A4, t: 17.4, d: 1.4, v: 0.06 },
-  ];
-
-  const CHORDS = [
-    { n: NOTE.A3, t: 0.0, d: 2.2, v: 0.08 }, { n: NOTE.E4, t: 0.3, d: 2.2, v: 0.06 },
-    { n: NOTE.A4, t: 0.6, d: 2.2, v: 0.05 },
-    { n: NOTE.F3, t: 4.8, d: 2.2, v: 0.08 }, { n: NOTE.C4, t: 5.1, d: 2.2, v: 0.06 },
-    { n: NOTE.F4, t: 5.4, d: 2.2, v: 0.05 },
-    { n: NOTE.C4, t: 9.6, d: 2.2, v: 0.08 }, { n: NOTE.G4, t: 9.9, d: 2.2, v: 0.06 },
-    { n: NOTE.E4, t: 10.2, d: 2.2, v: 0.05 },
-    { n: NOTE.G3, t: 14.4, d: 2.2, v: 0.08 }, { n: NOTE.D4, t: 14.7, d: 2.2, v: 0.06 },
-    { n: NOTE.B4, t: 15.0, d: 2.2, v: 0.05 },
-  ];
-
-  const LOOP_LENGTH = 19.4;
-
-  function scheduleMusicFallback() {
-    if (!audioCtx || !musicPlaying || usingYiruma) return;
-    const now = audioCtx.currentTime;
-    MELODY.forEach(n => playPianoNote(n.n, now + n.t, n.d, n.v));
-    COUNTER_MELODY.forEach(n => playPianoNote(n.n, now + n.t, n.d, n.v));
-    CHORDS.forEach(n => playPianoNote(n.n, now + n.t, n.d, n.v));
-    loopTimeout = setTimeout(() => {
-      if (musicPlaying && !usingYiruma) scheduleMusicFallback();
-    }, LOOP_LENGTH * 1000);
-  }
-
   function startMusic() {
-    // Coba Yiruma dulu
-    const audio = initYirumaAudio();
+    const audio = initAudio();
+    if (!audio) return;
 
-    // Tunggu sebentar agar event canplaythrough bisa jalan
-    setTimeout(() => {
-      if (usingYiruma && audio) {
-        audio.volume = 0.45;
-        const playPromise = audio.play();
-        if (playPromise) {
-          playPromise.catch(err => {
-            console.warn('Gagal play Yiruma, fallback ke Web Audio:', err);
-            usingYiruma = false;
-            initWebAudioFallback();
-            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-            scheduleMusicFallback();
-          });
-        }
-      } else {
-        // Fallback Web Audio
-        initWebAudioFallback();
-        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-        scheduleMusicFallback();
+    audio.volume = 0.45;
+
+    // Play dengan retry: kadang browser butuh waktu load
+    const tryPlay = () => {
+      const playPromise = audio.play();
+      if (playPromise) {
+        playPromise.then(() => {
+          musicPlaying = true;
+          musicBars.classList.add('playing');
+          musicToggleBtn.textContent = 'MUSIK ON';
+        }).catch(err => {
+          console.warn('Play gagal, retry dalam 500ms:', err.message);
+          // Retry sekali lagi setelah 500ms
+          setTimeout(() => {
+            const retry = audio.play();
+            if (retry) {
+              retry.then(() => {
+                musicPlaying = true;
+                musicBars.classList.add('playing');
+                musicToggleBtn.textContent = 'MUSIK ON';
+              }).catch(e => {
+                console.warn('Play gagal lagi. Musik tidak berbunyi. Pastikan MP3 ada.');
+              });
+            }
+          }, 500);
+        });
       }
-    }, 300);
+    };
 
-    musicPlaying = true;
-    musicBars.classList.add('playing');
-    musicToggleBtn.textContent = 'MUSIK ON';
+    tryPlay();
   }
 
   function stopMusic() {
     musicPlaying = false;
     musicBars.classList.remove('playing');
     musicToggleBtn.textContent = 'MUSIK OFF';
-
-    // Stop Yiruma
     if (bgmAudioEl) {
       try { bgmAudioEl.pause(); } catch(e){}
     }
-    // Stop Web Audio
-    if (loopTimeout) { clearTimeout(loopTimeout); loopTimeout = null; }
-    if (masterGain && audioCtx) {
-      try {
-        masterGain.gain.setValueAtTime(masterGain.gain.value, audioCtx.currentTime);
-        masterGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.4);
-      } catch(e){}
-    }
-    setTimeout(() => {
-      activeNotes.forEach(o => { try { o.stop(); } catch(e){} });
-      activeNotes = [];
-      if (masterGain && audioCtx) {
-        try { masterGain.gain.value = 0.22; } catch(e){}
-      }
-    }, 450);
   }
 
   function toggleMusic() {
@@ -744,7 +607,6 @@
     return new Promise(r => setTimeout(r, ms));
   }
 
-  // Cek apakah session masih valid
   function isSessionValid(token) {
     return token === sessionToken;
   }
@@ -761,7 +623,6 @@
       element.appendChild(caret);
 
       const interval = setInterval(() => {
-        // Cek token — kalau session berubah, batalkan animasi
         if (!isSessionValid(token)) {
           clearInterval(interval);
           try { caret.remove(); } catch(e){}
@@ -913,16 +774,13 @@
   //  SCENE RUNNER
   // ============================================================
   async function runScene(sceneId) {
-    // BATALKAN SEMUA ASYNC SEBELUMNYA
     sessionToken++;
     const myToken = sessionToken;
 
     const scene = SCENES[sceneId];
     if (!scene) { console.warn('Scene tidak ditemukan:', sceneId); return; }
 
-    // Kosongkan display
     displayArea.innerHTML = '';
-    // Reset header status
     setHeaderTyping(false);
 
     if (scene.header) setHeader(scene.header.name, scene.header.status, scene.header.avatar);
@@ -934,13 +792,11 @@
     }
   }
 
-  // Proses array pesan dengan token validasi
   async function playMessages(messages, token) {
     for (let i = 0; i < messages.length; i++) {
       if (!isSessionValid(token)) return;
       const msg = messages[i];
 
-      // Indikator mengetik untuk Nadia (kecuali pesan pertama)
       if (msg.type === 'chat' && msg.sender === 'nadia' && i > 0) {
         setHeaderTyping(true, 'Nadia');
         showTypingIndicator('nadia');
@@ -957,7 +813,6 @@
       await addBubble(msg, token);
       if (!isSessionValid(token)) return;
 
-      // Jeda antar pesan
       if (i < messages.length - 1) {
         const next = messages[i + 1];
         let delay = CONFIG.delayBetweenBubbles;
@@ -1059,7 +914,6 @@
         slider.addEventListener('input', e => {
           const val = e.target.value / 100;
           if (bgmAudioEl) bgmAudioEl.volume = val;
-          if (masterGain && audioCtx) masterGain.gain.setValueAtTime(val, audioCtx.currentTime);
         });
         const speedSel = document.getElementById('speedSelect');
         speedSel.addEventListener('change', e => {
@@ -2741,7 +2595,6 @@
     });
     musicToggleBtn.addEventListener('click', toggleMusic);
 
-    // Auto-start musik saat interaksi pertama
     const tryStart = () => {
       if (!musicPlaying) startMusic();
       document.removeEventListener('click', tryStart);
