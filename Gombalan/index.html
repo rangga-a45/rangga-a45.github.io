@@ -1,1 +1,350 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spesial Buat Kamu ❤️</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #0f172a, #1e293b, #311026);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+        .container {
+            width: 90%;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            position: relative;
+            z-index: 10;
+        }
 
+        /* Animasi Masuk & Keluar Slide */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes slideOut {
+            from { opacity: 1; transform: translateY(0) scale(1); }
+            to { opacity: 0; transform: translateY(-30px) scale(0.95); }
+        }
+
+        .anim-in {
+            animation: slideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .anim-out {
+            animation: slideOut 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Animasi Teks Masuk Per Baris */
+        @keyframes textFadeUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animated-text p {
+            opacity: 0;
+            animation: textFadeUp 0.6s ease forwards;
+        }
+        .animated-text p:nth-child(1) { animation-delay: 0.2s; }
+        .animated-text p:nth-child(2) { animation-delay: 0.5s; }
+        .animated-text p:nth-child(3) { animation-delay: 0.8s; }
+        .animated-text p:nth-child(4) { animation-delay: 1.1s; }
+
+        .hidden {
+            display: none !important;
+        }
+        h2 {
+            margin-bottom: 15px;
+            font-size: 1.35rem;
+            color: #ffb7c5;
+            text-shadow: 0 0 10px rgba(255, 183, 197, 0.4);
+        }
+        p {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            color: #f1f5f9;
+        }
+        /* Challenge Slide */
+        .progress-bar {
+            width: 100%;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            height: 10px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        .progress {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #ff6584, #ff8da1);
+            transition: width 0.2s ease;
+            border-radius: 10px;
+        }
+        .heart-btn {
+            background: none;
+            border: none;
+            font-size: 80px;
+            cursor: pointer;
+            transition: transform 0.1s ease, filter 0.2s;
+            margin: 15px 0;
+            filter: drop-shadow(0 0 15px rgba(255, 101, 132, 0.7));
+        }
+        .heart-btn:active {
+            transform: scale(0.82);
+        }
+        /* Content Slide Styles */
+        .avatar {
+            width: 85px;
+            height: 85px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            border: 3px solid #ff6584;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            box-shadow: 0 0 20px rgba(255, 101, 132, 0.5);
+        }
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .text-box {
+            text-align: left;
+            font-size: 0.93rem;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 14px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .next-btn, .send-btn {
+            background: linear-gradient(135deg, #ff6584, #e05270);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: opacity 0.3s, transform 0.2s;
+            margin-top: 5px;
+            width: 100%;
+            box-shadow: 0 5px 15px rgba(255, 101, 132, 0.4);
+        }
+        .next-btn:hover, .send-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        /* Form Input */
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+            outline: none;
+            resize: none;
+        }
+        textarea::placeholder, input[type="text"]::placeholder {
+            color: #cbd5e1;
+        }
+        textarea:focus, input[type="text"]:focus {
+            border-color: #ff6584;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Copyright Footer Style */
+        .footer-copyright {
+            position: absolute;
+            bottom: 15px;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 0.5px;
+            z-index: 10;
+        }
+
+        /* Background Floating Bubbles (No Lag) */
+        .bubble {
+            position: absolute;
+            bottom: -60px;
+            background: rgba(255, 255, 255, 0.09);
+            border-radius: 50%;
+            animation: rise 11s infinite linear;
+            z-index: 1;
+            will-change: transform, opacity;
+        }
+        @keyframes rise {
+            0% { transform: translateY(0) scale(1); opacity: 0; }
+            30% { opacity: 0.6; }
+            100% { transform: translateY(-110vh) scale(1.4); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background Animasi Gelembung Lembut -->
+    <div class="bubble" style="width: 30px; height: 30px; left: 10%; animation-duration: 9s;"></div>
+    <div class="bubble" style="width: 50px; height: 50px; left: 30%; animation-duration: 13s; animation-delay: 2s;"></div>
+    <div class="bubble" style="width: 20px; height: 20px; left: 65%; animation-duration: 7s; animation-delay: 1s;"></div>
+    <div class="bubble" style="width: 40px; height: 40px; left: 85%; animation-duration: 10s; animation-delay: 4s;"></div>
+
+    <!-- Musik Latar Belakang Romantis -->
+    <audio id="bg-music" loop>
+        <source src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf7f6.mp3?filename=romantic-cute-background-music-112174.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- SLIDE 1: Challenge -->
+    <div id="slide1" class="container anim-in">
+        <h2>Challenge buat Kamu 🥳</h2>
+        <p>Coba klik emoji di bawah ini sebanyak 25 kali yaa! 🫣</p>
+        <p id="counter">❤️ <span id="count">0</span> / 25</p>
+        <div class="progress-bar">
+            <div class="progress" id="progress-bar"></div>
+        </div>
+        <button class="heart-btn" onclick="handleClick()">💖</button>
+        <p id="sub-text" style="font-size: 0.85rem; color: #cbd5e1; min-height: 20px;"></p>
+    </div>
+
+    <!-- SLIDE 2: Gombalan dengan Animasi Teks -->
+    <div id="slide2" class="container hidden">
+        <div class="avatar">
+            <img src="25da8151-e83e-4aaa-8cd5-2b55176bf72a.gif" alt="Cute Bears">
+        </div>
+        <h2>Yeayyy Berhasil! ✨ — ♡</h2>
+        <p><strong>Ada yang mau aku sampein nih... 🤔</strong></p>
+        <div class="text-box animated-text">
+            <p>Orang bilang pelangi itu indah karena warnanya yang bermacam-macam 🌈.</p>
+            <p>Kopi pahit pun jadi terasa nikmat kalau ditemani suasana tenang ☕.</p>
+            <p style="margin-bottom:0;">Tapi buat aku, hidup ini jauh lebih sempurna dan berwarna sejak ada kamu yang selalu nemenin hari-hari aku 🥰.</p>
+        </div>
+        <button class="next-btn" onclick="switchSlide(2, 3)">Lanjut ke Pantun 🎋</button>
+    </div>
+
+    <!-- SLIDE 3: Pantun dengan Animasi Teks -->
+    <div id="slide3" class="container hidden">
+        <div class="avatar">
+            <img src="Cute gif, Falco asblor.gif" alt="Cute Bears">
+        </div>
+        <h2>Pantun Spesial Buat Kamu 🎋✨</h2>
+        <div class="text-box animated-text">
+            <p>Pagi-pagi minum teh melati 🍵,</p>
+            <p>Rasanya manis seharum kamboja.</p>
+            <p>Cuma kamu yang ada di dalam hati 💖,</p>
+            <p style="margin-bottom:0;">Yang gak bakal tergantikan oleh siapa saja.</p>
+        </div>
+        <button class="next-btn" onclick="switchSlide(3, 4)">Ada Pesan Terakhir 👇</button>
+    </div>
+
+    <!-- SLIDE 4: Kolom Isian Kata-Kata dari Dia -->
+    <div id="slide4" class="container hidden">
+        <div class="avatar">
+            <img src="bb83a32e-0614-438a-b2d3-350637c59643.gif" alt="Cute Bears">
+        </div>
+        <h2>Tulis Balasan Kamu 💌</h2>
+        <p>Isi kolom di bawah ini buat kirim tanggapan atau kata-kata manis balik ke WhatsApp aku yaa! 🥰</p>
+        
+        <input type="text" id="nama" placeholder="Nama Kamu..." required>
+        <textarea id="pesan" rows="4" placeholder="Tulis kata-kata atau perasaan kamu di sini..." required></textarea>
+        
+        <!-- Ubah nomor di bawah dengan nomor WhatsApp kamu (awalan 62) -->
+        <button class="send-btn" onclick="sendToWA('6289509844510')">Kirim ke WhatsApp 📲</button>
+    </div>
+
+    <!-- Copyright Footer -->
+    <div class="footer-copyright">
+        Copyright &copy; 2026 Rangga Ardiansyah
+    </div>
+
+    <script>
+        let count = 0;
+        const target = 25;
+        const countSpan = document.getElementById('count');
+        const progressBar = document.getElementById('progress-bar');
+        const subText = document.getElementById('sub-text');
+        const bgMusic = document.getElementById('bg-music');
+
+        function handleClick() {
+            if (count === 0) {
+                bgMusic.play().catch(e => console.log("Audio play blocked:", e));
+            }
+
+            if (count < target) {
+                count++;
+                countSpan.innerText = count;
+                let percent = (count / target) * 100;
+                progressBar.style.width = percent + '%';
+
+                if (count === 10) {
+                    subText.innerText = "Ayo dikit lagi! 😆";
+                } else if (count === 20) {
+                    subText.innerText = "dikit lagi trias... 🤏";
+                } else if (count === target) {
+                    subText.innerText = "YEAYY BERHASIL! ✨";
+                    setTimeout(() => {
+                        switchSlide(1, 2);
+                    }, 800);
+                }
+            }
+        }
+
+        function switchSlide(currentSlideNum, nextSlideNum) {
+            const currentEl = document.getElementById('slide' + currentSlideNum);
+            const nextEl = document.getElementById('slide' + nextSlideNum);
+
+            currentEl.classList.remove('anim-in');
+            currentEl.classList.add('anim-out');
+
+            setTimeout(() => {
+                currentEl.classList.add('hidden');
+                currentEl.classList.remove('anim-out');
+
+                nextEl.classList.remove('hidden');
+                nextEl.classList.add('anim-in');
+            }, 350);
+        }
+
+        function sendToWA(nomorWA) {
+            const nama = document.getElementById('nama').value.trim();
+            const pesan = document.getElementById('pesan').value.trim();
+
+            if (!nama || !pesan) {
+                alert('Isi nama sama pesannya dulu yaa! 😉');
+                return;
+            }
+
+            const teksWA = `Halo! Aku ${nama} 🥰%0A%0AIni balasan aku:%0A"${pesan}"`;
+            const url = `https://api.whatsapp.com/send?phone=${nomorWA}&text=${teksWA}`;
+            
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+</html>
