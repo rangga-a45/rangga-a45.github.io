@@ -1,1 +1,535 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>S.id/tapijuga</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1200') no-repeat center center/cover;
+      animation: bgMove 12s infinite alternate ease-in-out;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    @keyframes bgMove {
+      0% { background-position: 0% 50%; transform: scale(1); }
+      100% { background-position: 100% 50%; transform: scale(1.04); }
+    }
+
+    /* Lapisan Gelap Transparan */
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.35);
+      z-index: 1;
+    }
+
+    /* BUBBLE BACKGROUND */
+    .bg-bubbles {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .bubble {
+      position: absolute;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      border-radius: 50%;
+      animation: floatBubble 6s infinite linear;
+    }
+
+    .bubble:nth-child(1) { width: 35px; height: 35px; left: 15%; bottom: -10%; animation-duration: 7s; animation-delay: 0s; }
+    .bubble:nth-child(2) { width: 25px; height: 25px; left: 40%; bottom: -10%; animation-duration: 5s; animation-delay: 1.5s; }
+    .bubble:nth-child(3) { width: 45px; height: 45px; left: 70%; bottom: -10%; animation-duration: 8s; animation-delay: 0.5s; }
+    .bubble:nth-child(4) { width: 30px; height: 30px; left: 88%; bottom: -10%; animation-duration: 6s; animation-delay: 2s; }
+
+    @keyframes floatBubble {
+      0% { transform: translateY(0) translateX(0) scale(0.8); opacity: 0; }
+      20% { opacity: 0.8; }
+      80% { opacity: 0.8; }
+      100% { transform: translateY(-110vh) translateX(30px) scale(1.1); opacity: 0; }
+    }
+
+    /* KARTU UTAMA */
+    .card {
+      position: relative;
+      z-index: 3;
+      width: 90%;
+      max-width: 350px;
+      background: rgba(255, 255, 255, 0.14);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 2px solid rgba(255, 255, 255, 0.45);
+      border-radius: 24px;
+      padding: 24px 18px;
+      color: white;
+      text-align: center;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.35);
+      will-change: transform, opacity;
+    }
+
+    /* ORNAMEN SUDUT KARTU */
+    .corner {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-color: #ff65a3;
+      border-style: solid;
+    }
+    .top-left { top: -2px; left: -2px; border-width: 3px 0 0 3px; border-top-left-radius: 24px; }
+    .bottom-right { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; border-bottom-right-radius: 24px; }
+
+    /* ANIMASI MASUK & KELUAR */
+    .card.show {
+      animation: cardIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    .card.hide {
+      animation: cardOut 0.2s ease-in forwards;
+    }
+
+    @keyframes cardIn {
+      0% { opacity: 0; transform: scale(0.85) translateY(15px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    @keyframes cardOut {
+      0% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.85) translateY(-15px); }
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* SECTION PIN */
+    .pin-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .pin-sub {
+      font-size: 0.85rem;
+      margin-bottom: 16px;
+      opacity: 0.9;
+    }
+
+    .pin-dots {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .dot {
+      width: 14px;
+      height: 14px;
+      border: 2px solid white;
+      border-radius: 50%;
+      transition: all 0.15s ease;
+    }
+
+    .dot.active {
+      background: #ff4081;
+      border-color: #ff4081;
+      box-shadow: 0 0 10px #ff4081;
+      transform: scale(1.15);
+    }
+
+    .status-msg {
+      font-size: 0.85rem;
+      min-height: 42px;
+      margin-bottom: 12px;
+      line-height: 1.35;
+    }
+
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .key {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      padding: 11px 0;
+      border-radius: 12px;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.08s ease, background 0.1s ease;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .key:active {
+      background: rgba(255, 255, 255, 0.5);
+      transform: scale(0.9);
+    }
+
+    /* AVATAR GIF */
+    .avatar-wrapper {
+      position: relative;
+      width: 85px;
+      height: 85px;
+      margin: 0 auto 12px;
+    }
+
+    .avatar-gif {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #fff;
+      border: 2px solid white;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0); }
+      100% { transform: scale(1); }
+    }
+
+    .content-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .content-text {
+      text-align: left;
+      font-size: 0.9rem;
+      line-height: 1.55;
+      white-space: pre-line;
+      margin-bottom: 12px;
+    }
+
+    /* KURSOR KETIK */
+    .typing::after {
+      content: '|';
+      animation: blinkCursor 0.5s infinite;
+      font-weight: bold;
+      color: #ff65a3;
+    }
+
+    @keyframes blinkCursor {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    .timer {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-reply {
+      margin-top: 10px;
+      background: rgba(255, 255, 255, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      padding: 8px 22px;
+      border-radius: 20px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      backdrop-filter: blur(5px);
+      transition: transform 0.1s, background-color 0.1s;
+      animation: popIn 0.3s ease;
+    }
+
+    .btn-reply:active {
+      transform: scale(0.92);
+      background: rgba(255, 255, 255, 0.45);
+    }
+
+    /* KONTROL MUSIK & COPYRIGHT */
+    .music-control {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      z-index: 3;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      padding: 6px 12px;
+      border-radius: 20px;
+      color: white;
+      font-size: 0.75rem;
+      cursor: pointer;
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .footer-credit {
+      position: absolute;
+      bottom: 15px;
+      z-index: 3;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.75rem;
+      text-align: center;
+      letter-spacing: 0.5px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- AUDIO BACKSOUND -->
+  <audio id="bgMusic" loop preload="auto">
+    <source src="ssstik.io_1792205292268.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- TOMBOL KONTROL MUSIK -->
+  <div class="music-control" onclick="toggleMusic()" id="musicBtn">
+    🎵 <span id="musicStatus">Putar Musik</span>
+  </div>
+
+  <!-- BUBBLE BACKGROUND -->
+  <div class="bg-bubbles">
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+  </div>
+
+  <!-- CARD 1: PIN -->
+  <div class="card show" id="pinCard">
+    <div class="corner top-left"></div>
+    <div class="corner bottom-right"></div>
+
+    <div class="pin-title">Tebak PIN-nya yaaw 🥳🎉</div>
+    <div class="pin-sub">Masukkan 4 angka PIN yang tepat!</div>
+    
+    <div class="pin-dots">
+      <div class="dot" id="d1"></div>
+      <div class="dot" id="d2"></div>
+      <div class="dot" id="d3"></div>
+      <div class="dot" id="d4"></div>
+    </div>
+
+    <div class="status-msg" id="statusMsg"></div>
+
+    <div class="keypad">
+      <div class="key" onclick="press('1')">1</div>
+      <div class="key" onclick="press('2')">2</div>
+      <div class="key" onclick="press('3')">3</div>
+      <div class="key" onclick="press('4')">4</div>
+      <div class="key" onclick="press('5')">5</div>
+      <div class="key" onclick="press('6')">6</div>
+      <div class="key" onclick="press('7')">7</div>
+      <div class="key" onclick="press('8')">8</div>
+      <div class="key" onclick="press('9')">9</div>
+      <div></div>
+      <div class="key" onclick="press('0')">0</div>
+      <div class="key" onclick="backspace()">⌫</div>
+    </div>
+  </div>
+
+  <!-- CARD 2: TEKS BAGIAN 1 (Avatar menggunakan GIF 1) -->
+  <div class="card hidden" id="msgCard1">
+    <div class="corner top-left"></div>
+    <div class="corner bottom-right"></div>
+
+    <div class="avatar-wrapper">
+      <img src="Cute gif, Falco asblor.gif" alt="Avatar 1" class="avatar-gif">
+    </div>
+    <div class="content-title">Kamu Tau Ngga? 🤔</div>
+    <div class="content-text typing" id="typeText1"></div>
+    <div class="timer hidden" id="timer">⏳ <span id="count">3</span></div>
+  </div>
+
+  <!-- CARD 3: TEKS BAGIAN 2 (Avatar menggunakan GIF 2) -->
+  <div class="card hidden" id="msgCard2">
+    <div class="corner top-left"></div>
+    <div class="corner bottom-right"></div>
+
+    <div class="avatar-wrapper">
+      <img src="986d9ab3-86ce-48f8-a44a-097b00aedb49.gif" alt="Avatar 2" class="avatar-gif">
+    </div>
+    <div class="content-title">Loh.. Kok Nungguin?! 😆</div>
+    <div class="content-text typing" id="typeText2"></div>
+    <button class="btn-reply hidden" id="btnReply" onclick="sendToWhatsApp()">💌 Balas ke WhatsApp</button>
+  </div>
+
+  <!-- LABEL COPYRIGHT -->
+  <div class="footer-credit">
+    Dibuat oleh Rangga Ardiansyah © 2026
+  </div>
+
+  <script>
+    const correctPin = "0123";
+    let inputPin = "";
+    let attempts = 0;
+
+    const music = document.getElementById('bgMusic');
+    const musicStatus = document.getElementById('musicStatus');
+    let isPlaying = false;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      music.play().then(() => {
+        musicStatus.innerText = "Matikan Musik";
+        isPlaying = true;
+      }).catch(e => {});
+    });
+
+    function toggleMusic() {
+      if (isPlaying) {
+        music.pause();
+        musicStatus.innerText = "Putar Musik";
+        isPlaying = false;
+      } else {
+        music.play().then(() => {
+          musicStatus.innerText = "Matikan Musik";
+          isPlaying = true;
+        }).catch(e => {});
+      }
+    }
+
+    function press(num) {
+      if (!isPlaying) {
+        music.play().then(() => {
+          musicStatus.innerText = "Matikan Musik";
+          isPlaying = true;
+        }).catch(e => {});
+      }
+
+      if (inputPin.length < 4) {
+        inputPin += num;
+        updateDots();
+        if (inputPin.length === 4) {
+          setTimeout(checkPin, 30);
+        }
+      }
+    }
+
+    function backspace() {
+      inputPin = inputPin.slice(0, -1);
+      updateDots();
+    }
+
+    function updateDots() {
+      for (let i = 1; i <= 4; i++) {
+        const dot = document.getElementById(`d${i}`);
+        if (i <= inputPin.length) {
+          dot.classList.add('active');
+        } else {
+          dot.classList.remove('active');
+        }
+      }
+    }
+
+    function checkPin() {
+      attempts++;
+      const status = document.getElementById('statusMsg');
+
+      if (inputPin === correctPin) {
+        status.innerHTML = "<b>Yayyy! PIN-nya benerr! 🥳</b>";
+        setTimeout(() => {
+          switchCard('pinCard', 'msgCard1', showPart1);
+        }, 400);
+      } else {
+        if (attempts === 1) {
+          status.innerHTML = "<b>Yahh! PIN-nya salah! 😐</b><br>Coba lagi ya!";
+        } else {
+          status.innerHTML = "<b>PIN-nya salah lagi! 🤪</b><br><b>Clue:</b> 0123";
+        }
+        setTimeout(() => {
+          inputPin = "";
+          updateDots();
+        }, 300);
+      }
+    }
+
+    function switchCard(hideId, showId, callback) {
+      const hideElem = document.getElementById(hideId);
+      const showElem = document.getElementById(showId);
+
+      hideElem.classList.remove('show');
+      hideElem.classList.add('hide');
+
+      setTimeout(() => {
+        hideElem.classList.add('hidden');
+        hideElem.classList.remove('hide');
+
+        showElem.classList.remove('hidden');
+        showElem.classList.add('show');
+        if (callback) callback();
+      }, 200);
+    }
+
+    function typeWriter(elementId, text, speed, callback) {
+      let i = 0;
+      const elem = document.getElementById(elementId);
+      elem.innerHTML = "";
+      
+      function type() {
+        if (i < text.length) {
+          elem.innerHTML += text.charAt(i);
+          i++;
+          setTimeout(type, speed);
+        } else {
+          elem.classList.remove('typing');
+          if (callback) callback();
+        }
+      }
+      type();
+    }
+
+    function showPart1() {
+      const text1 = "Ada 6 hal terindah di dunia ini 🌍\n6. Kupu-kupu 🦋\n5. Bulan 🌙\n4. Bintang 🌟\n3. Pelangi 🌈\n2. Bunga 🌸\n1. ...";
+      
+      typeWriter('typeText1', text1, 20, () => {
+        document.getElementById('timer').classList.remove('hidden');
+        let count = 3;
+        const interval = setInterval(() => {
+          count--;
+          document.getElementById('count').innerText = count;
+          if (count === 0) {
+            clearInterval(interval);
+            switchCard('msgCard1', 'msgCard2', showPart2);
+          }
+        }, 1000);
+      });
+    }
+
+    function showPart2() {
+      const text2 = "Berharap ada kamu di nomer-nomer ini? 🤔\n\nGa adaa! 🤪👉\n\nSoalnya...\nKalo kamu itu ga bisa dihitung pake nomer! 😆\n\nKamu bukan cuma indah, tapi juga:\nCakeep, lucu, imut, gemesin, baik hati. Pokoknya... you're my favorite person, always and foreverr 🥺💖";
+      
+      typeWriter('typeText2', text2, 18, () => {
+        document.getElementById('btnReply').classList.remove('hidden');
+      });
+    }
+
+    function sendToWhatsApp() {
+      const whatsappNumber = "6289509844510"; // Ubah dengan nomor WhatsApp Anda
+      const message = "Trimakasih bang 🥺💖";
+      const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+      window.open(url, '_blank');
+    }
+  </script>
+</body>
+</html>
